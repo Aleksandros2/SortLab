@@ -1,21 +1,21 @@
-# SortLab Benutzeranleitung für Anfänger
+# SortLab Benutzeranleitung fuer Anfaenger
 
-Diese Anleitung ist für Personen gedacht, die Sortieralgorithmen noch nicht kennen oder keine Informatik-Erfahrung haben.
+Diese Anleitung ist fuer Personen gedacht, die Sortieralgorithmen noch nicht kennen oder keine Informatik-Erfahrung haben.
 
 ## Was ist SortLab?
 
 SortLab ist eine Website, die zeigt, wie ein Computer Zahlen sortiert.
 
-Statt nur Code zu lesen, sieht man farbige Balken. Jeder Balken steht für eine Zahl. Wenn ein Algorithmus läuft, sieht man, wie die Balken verglichen und vertauscht werden.
+Statt nur Code zu lesen, sieht man farbige Balken. Jeder Balken steht fuer eine Zahl. Wenn ein Algorithmus laeuft, sieht man, wie die Balken verglichen und vertauscht werden.
 
 ## Was kann man damit lernen?
 
 Mit SortLab kann man verstehen:
 
-- wie Sortieralgorithmen grundsätzlich funktionieren
+- wie Sortieralgorithmen grundsaetzlich funktionieren
 - warum manche Algorithmen schneller sind als andere
 - was Vergleiche und Swaps bedeuten
-- wie sich ein unsortiertes Array Schritt für Schritt verändert
+- wie sich ein unsortiertes Array Schritt fuer Schritt veraendert
 
 ## Starten
 
@@ -34,19 +34,19 @@ Danach zeigt das Terminal eine Adresse an, meistens:
 http://localhost:5173
 ```
 
-Diese Adresse im Browser öffnen.
+Diese Adresse im Browser oeffnen.
 
 ## Bedienung
 
 ### 1. Array erzeugen
 
-Am Anfang wird ein zufälliges Array angezeigt. Dieses Array besteht aus Balken mit unterschiedlicher Höhe.
+Am Anfang wird ein zufaelliges Array angezeigt. Dieses Array besteht aus Balken mit unterschiedlicher Hoehe.
 
-Wenn du ein neues Array möchtest, klicke auf den Button zum Mischen oder Neu-Erzeugen des Arrays.
+Wenn du ein neues Array moechtest, klicke auf den Button zum Neu-Erzeugen des Arrays.
 
-### 2. Algorithmus auswählen
+### 2. Algorithmus auswaehlen
 
-Wähle einen Sortieralgorithmus aus, zum Beispiel:
+Waehle einen Sortieralgorithmus aus, zum Beispiel:
 
 ```text
 Bubble Sort
@@ -58,19 +58,19 @@ Heap Sort
 
 ### 3. Sortierung starten
 
-Klicke auf **Start** oder den entsprechenden Start-Button.
+Klicke auf den Start-Button.
 
-Jetzt beginnt SortLab, das Array Schritt für Schritt zu sortieren.
+Jetzt beginnt SortLab, das Array Schritt fuer Schritt zu sortieren.
 
-### 4. Geschwindigkeit ändern
+### 4. Geschwindigkeit aendern
 
 Mit dem Geschwindigkeitsregler kannst du einstellen, ob die Animation langsam oder schnell laufen soll.
 
-Langsam ist besser zum Lernen. Schnell ist besser, wenn du nur das Ergebnis sehen möchtest.
+Langsam ist besser zum Lernen. Schnell ist besser, wenn du nur das Ergebnis sehen moechtest.
 
 ### 5. Werte beobachten
 
-Während der Sortierung zeigt SortLab Statistiken an, zum Beispiel:
+Waerend der Sortierung zeigt SortLab Statistiken an, zum Beispiel:
 
 - Vergleiche
 - Swaps
@@ -87,11 +87,11 @@ Ein Array ist eine Liste von Werten. In SortLab wird diese Liste als Balken darg
 
 ### Sortieren
 
-Sortieren bedeutet, die Werte in die richtige Reihenfolge zu bringen, zum Beispiel von klein nach groß.
+Sortieren bedeutet, die Werte in die richtige Reihenfolge zu bringen, zum Beispiel von klein nach gross.
 
 ### Vergleich
 
-Ein Vergleich bedeutet: Der Algorithmus prüft zwei Werte und entscheidet, welcher größer oder kleiner ist.
+Ein Vergleich bedeutet: Der Algorithmus prueft zwei Werte und entscheidet, welcher groesser oder kleiner ist.
 
 ### Swap
 
@@ -108,7 +108,7 @@ Die Laufzeit zeigt, wie lange der Algorithmus gebraucht hat.
 3. Beobachte, welche Balken verglichen und vertauscht werden.
 4. Vergleiche danach Bubble Sort mit Quick Sort oder Heap Sort.
 
-## Häufige Fragen
+## Haeufige Fragen
 
 ### Warum bewegen sich die Balken?
 
@@ -116,12 +116,12 @@ Die Balken bewegen sich, weil der Algorithmus Werte vergleicht und vertauscht.
 
 ### Warum sind manche Algorithmen schneller?
 
-Manche Algorithmen brauchen weniger Vergleiche und Swaps. Deshalb sind sie bei größeren Arrays schneller.
+Manche Algorithmen brauchen weniger Vergleiche und Swaps. Deshalb sind sie bei groesseren Arrays schneller.
 
-### Muss ich programmieren können?
+### Muss ich programmieren koennen?
 
-Nein. SortLab ist dafür gedacht, dass man Sortieralgorithmen visuell verstehen kann.
+Nein. SortLab ist dafuer gedacht, dass man Sortieralgorithmen visuell verstehen kann.
 
 ### Was ist das Ziel?
 
-Am Ende sollen alle Balken sortiert sein, also von klein nach groß angeordnet.
+Am Ende sollen alle Balken sortiert sein, also von klein nach gross angeordnet.
