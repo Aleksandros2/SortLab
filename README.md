@@ -1,24 +1,24 @@
 # SortLab
 
-SortLab ist ein interaktiver Visualizer fuer Sortieralgorithmen. Das Projekt zeigt Schritt fuer Schritt, wie verschiedene Algorithmen ein Array sortieren, und macht Vergleiche, Swaps, Schritte und Laufzeit verstaendlich sichtbar.
+SortLab ist ein interaktiver Visualizer für Sortieralgorithmen. Das Projekt zeigt Schritt für Schritt, wie verschiedene Algorithmen ein Array sortieren, und macht Vergleiche, Swaps, Schritte und Laufzeit verständlich sichtbar.
 
 ## Projektstatus
 
-Aktueller Stand: **fertiges Projekt**
+Aktueller Stand: **fertiges Portfolio-Projekt**
 
 ## Ziel des Projekts
 
-SortLab soll helfen, Sortieralgorithmen visuell zu verstehen. Statt nur Code oder Theorie zu sehen, koennen Nutzer beobachten, wie ein Array veraendert wird und welche Unterschiede zwischen den Algorithmen entstehen.
+SortLab soll helfen, Sortieralgorithmen visuell zu verstehen. Statt nur Code oder Theorie zu sehen, können Nutzer beobachten, wie ein Array verändert wird und welche Unterschiede zwischen den Algorithmen entstehen.
 
 ## Funktionen
 
 - interaktive Visualisierung von Sortieralgorithmen
-- Balkenansicht fuer Array-Werte
+- Balkenansicht für Array-Werte
 - Live-Steuerung der Geschwindigkeit
 - Anzeige von Vergleichen, Swaps, Schritten und Laufzeit
-- Lernbereich zur Erklaerung der Algorithmen
+- Lernbereich zur Erklärung der Algorithmen
 - Vergleich verschiedener Sortierverfahren
-- moderne Weboberflaeche
+- moderne Weboberfläche
 
 ## Enthaltene Algorithmen
 
@@ -58,9 +58,9 @@ npm run build
 
 ## Benutzeranleitung
 
-Eine einfache Anleitung fuer Personen ohne Informatik-Vorwissen findest du hier:
+Eine einfache Anleitung für Personen ohne Informatik-Vorwissen findest du hier:
 
-[Benutzeranleitung fuer Anfaenger](BENUTZERANLEITUNG.md)
+[Benutzeranleitung für Anfänger](BENUTZERANLEITUNG.md)
 
 ## Projektstruktur
 
@@ -82,9 +82,9 @@ sortlab/
 Dieses Projekt dient dazu,
 
 - Sortierlogik besser zu verstehen
-- Visualisierung und State-Management in React zu ueben
+- Visualisierung und State-Management in React zu üben
 - Algorithmen nicht nur theoretisch, sondern auch praktisch nachvollziehbar darzustellen
 
 ## Einsatz im Portfolio
 
-SortLab ist eines meiner Portfolio-Projekte und enthaelt in diesem Repository sowohl den Quellcode als auch die Dokumentation zum Projekt.
+SortLab ist ein ergänzendes Portfolio-Projekt und zeigt die Verbindung von Algorithmen, React-State und schrittweiser Visualisierung.
