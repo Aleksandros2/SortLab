@@ -19,7 +19,6 @@ SortLab soll helfen, Sortieralgorithmen visuell zu verstehen. Statt nur Code ode
 - Lernbereich zur Erklärung der Algorithmen
 - Vergleich verschiedener Sortierverfahren
 - moderne Weboberfläche
-- automatisierte Tests für alle enthaltenen Algorithmen
 
 ## Enthaltene Algorithmen
 
@@ -35,7 +34,6 @@ SortLab soll helfen, Sortieralgorithmen visuell zu verstehen. Statt nur Code ode
 - Vite
 - JavaScript
 - CSS
-- Node.js Test Runner
 - GitHub
 
 ## Installation
@@ -51,14 +49,6 @@ npm install
 ```bash
 npm run dev
 ```
-
-## Tests
-
-```bash
-npm test
-```
-
-Die Tests prüfen alle Algorithmen mit leeren, bereits sortierten, umgekehrt sortierten sowie doppelten und negativen Werten.
 
 ## Produktions-Build
 
@@ -81,8 +71,7 @@ sortlab/
 |  |- main.jsx
 |  |- styles.css
 |  `- utils/
-|     |- sortAlgorithms.js
-|     `- sortAlgorithms.test.js
+|     `- sortAlgorithms.js
 |- index.html
 |- package.json
 `- README.md
@@ -95,7 +84,6 @@ Dieses Projekt dient dazu,
 - Sortierlogik besser zu verstehen
 - Visualisierung und State-Management in React zu üben
 - Algorithmen nicht nur theoretisch, sondern auch praktisch nachvollziehbar darzustellen
-- algorithmische Logik mit automatisierten Tests abzusichern
 
 ## Einsatz im Portfolio
 
