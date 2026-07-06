@@ -14,8 +14,12 @@ Die Version ist als ergänzendes Portfolio-Projekt gedacht. Sie ist funktional, 
 
 - interaktive Visualisierung von Sortieralgorithmen
 - zufällige Arrays mit einstellbarer Grösse
+- eigene Array-Eingabe mit Validierung für ganze Zahlen
+- Preset-Arrays für sortierte, umgekehrte, fast sortierte, doppelte und negative Werte
 - steuerbare Animationsgeschwindigkeit
 - farbliche Markierung von Vergleichen, Bewegungen und sortierten Werten
+- Erklärmodus mit kurzer Beschreibung des aktuellen Animationsschritts
+- Vergleichsmodus für zwei Algorithmen auf demselben Array
 - Statistik für Vergleiche, Bewegungen, Animationsschritte und Schrittgenerierungszeit
 - kurzer Lernbereich mit Laufzeitklassen und Stabilität
 
@@ -53,23 +57,30 @@ npm run build
 npm test
 ```
 
-Getestet werden alle enthaltenen Sortieralgorithmen mit leeren Arrays, einzelnen Werten, bereits sortierten Arrays, umgekehrt sortierten Arrays, doppelten Werten und negativen Werten. Zusätzlich wird die Bewegungszählung geprüft.
+Getestet werden alle enthaltenen Sortieralgorithmen mit leeren Arrays, einzelnen Werten, bereits sortierten Arrays, umgekehrt sortierten Arrays, doppelten Werten und negativen Werten. Zusätzlich werden Bewegungszählung und Array-Eingabevalidierung geprüft.
 
 Zuletzt ausgeführte lokale Resultate:
 
 - `npm install`: erfolgreich, mit 6 gemeldeten Sicherheitsmeldungen in Abhängigkeiten
-- `npm test`: erfolgreich, 36 Tests bestanden
+- `npm test`: erfolgreich, 42 Tests bestanden
 - `npm run build`: erfolgreich, Vite-Build erstellt
+
+Die CI in `.github/workflows/ci.yml` führt bei Push und Pull Request ebenfalls Installation, Tests und Build aus.
 
 ## Projektstruktur
 
 ```text
 SortLab/
+|- .github/
+|  `- workflows/
+|     `- ci.yml
 |- src/
 |  |- App.jsx
 |  |- main.jsx
 |  |- styles.css
 |  `- utils/
+|     |- arrayInput.js
+|     |- arrayInput.test.js
 |     |- sortAlgorithms.js
 |     `- sortAlgorithms.test.js
 |- index.html
@@ -82,16 +93,18 @@ SortLab/
 
 - React und Vite werden für eine einfache, schnelle Single-Page-App genutzt.
 - Die Sortierfunktionen erzeugen Animationsschritte, damit die UI jeden Zustand anzeigen kann.
+- Eigene Eingaben werden vor der Übernahme geprüft, damit nur ganze Zahlen im unterstützten Bereich visualisiert werden.
 - Die Statistik `Bewegungen` ersetzt die frühere Bezeichnung `Swaps`, weil Insertion Sort Werte verschiebt und nicht nur Elemente vertauscht.
 - Die angezeigte Zeit ist die Berechnungs- und Schrittgenerierungszeit. Sie ist kein reiner Algorithmus-Benchmark, weil auch das Erzeugen der Animationsdaten enthalten ist.
 - Vitest testet die Sortierlogik unabhängig von der React-Oberfläche.
+- GitHub Actions prüft Tests und Build automatisch für neue Änderungen.
 
 ## Bekannte Einschränkungen
 
 - Die Zeitmessung hängt vom Browser, Gerät und aktuellen Systemzustand ab.
 - Die App misst die Schrittgenerierung, nicht die reine algorithmische Laufzeit.
 - Es gibt noch keine automatisierten UI- oder Screenshot-Tests.
-- Die Arrays werden zufällig erzeugt; eigene Eingaben sind aktuell nicht vorgesehen.
+- Der Vergleichsmodus vergleicht Statistikwerte, aber animiert nicht beide Algorithmen parallel.
 
 ## Screenshot
 

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { formatArrayInput, parseArrayInput } from './utils/arrayInput';
 import { algorithmContent, algorithmMap } from './utils/sortAlgorithms';
 
 const ARRAY_MIN = 8;
@@ -13,6 +14,44 @@ const algorithmOptions = [
   { value: 'insertion', label: 'Insertion Sort' },
   { value: 'quick', label: 'Quick Sort' },
   { value: 'heap', label: 'Heap Sort' }
+];
+
+const presetOptions = [
+  {
+    id: 'sorted',
+    label: 'Sortiert',
+    create: (size) => Array.from({ length: size }, (_, index) => index + 1)
+  },
+  {
+    id: 'reversed',
+    label: 'Umgekehrt',
+    create: (size) => Array.from({ length: size }, (_, index) => size - index)
+  },
+  {
+    id: 'duplicates',
+    label: 'Duplikate',
+    create: (size) => Array.from({ length: size }, (_, index) => [12, 28, 12, 45, 28, 7][index % 6])
+  },
+  {
+    id: 'nearly',
+    label: 'Fast sortiert',
+    create: (size) => Array.from({ length: size }, (_, index) => index + 1).map((value, index, array) => {
+      if (index === Math.floor(size / 2)) {
+        return array[Math.max(0, index - 1)];
+      }
+
+      if (index === Math.max(0, Math.floor(size / 2) - 1)) {
+        return array[Math.floor(size / 2)];
+      }
+
+      return value;
+    })
+  },
+  {
+    id: 'negative',
+    label: 'Negative Werte',
+    create: (size) => Array.from({ length: size }, (_, index) => ((index % 2 === 0 ? 1 : -1) * ((index * 7) % 41)))
+  }
 ];
 
 const randomValue = () => Math.floor(Math.random() * 90) + 10;
@@ -37,14 +76,51 @@ const createInitialState = (size) => {
   };
 };
 
+const getAlgorithmLabel = (value) =>
+  algorithmOptions.find((option) => option.value === value)?.label ?? value;
+
+const describeStep = (step, previousStep) => {
+  if (!step) {
+    return 'Bereit für die nächste Sortierung.';
+  }
+
+  if (step.swapped.length > 0) {
+    const values = step.swapped.map((index) => step.array[index]).join(' und ');
+    return step.swapped.length > 1
+      ? `Bewege Werte an den Positionen ${step.swapped.join(' und ')}. Aktuelle Werte: ${values}.`
+      : `Setze ${values} an Position ${step.swapped[0]}.`;
+  }
+
+  if (step.compared.length > 0) {
+    const values = step.compared.map((index) => step.array[index]).join(' und ');
+    return step.compared.length > 1
+      ? `Vergleiche ${values}.`
+      : `Prüfe den Wert ${values}.`;
+  }
+
+  if (previousStep && step.sorted.length > previousStep.sorted.length) {
+    return `${step.sorted.length} von ${step.array.length} Positionen sind als sortiert markiert.`;
+  }
+
+  if (step.sorted.length === step.array.length && step.array.length > 0) {
+    return 'Das Array ist vollständig sortiert.';
+  }
+
+  return 'Der aktuelle Zustand wird angezeigt.';
+};
+
 function App() {
   const initial = useMemo(() => createInitialState(DEFAULT_SIZE), []);
   const [algorithm, setAlgorithm] = useState('bubble');
+  const [compareAlgorithm, setCompareAlgorithm] = useState('quick');
   const [arraySize, setArraySize] = useState(DEFAULT_SIZE);
   const [speed, setSpeed] = useState(DEFAULT_SPEED);
   const [baseArray, setBaseArray] = useState(() => initial.array);
+  const [arrayInput, setArrayInput] = useState(() => formatArrayInput(initial.array));
+  const [arrayInputError, setArrayInputError] = useState('');
   const [visualState, setVisualState] = useState(() => initial.visual);
   const [steps, setSteps] = useState([]);
+  const [comparisonRows, setComparisonRows] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -121,9 +197,19 @@ function App() {
 
   const explanation = useMemo(() => algorithmContent[algorithm], [algorithm]);
   const tallestValue = useMemo(
-    () => Math.max(...visualState.array, 1),
+    () => Math.max(...visualState.array.map((value) => Math.abs(value)), 1),
     [visualState.array]
   );
+  const previousStep = currentStep > 0 ? steps[currentStep - 1] : undefined;
+  const stepDescription = describeStep(visualState, previousStep);
+  const progress = steps.length > 1 ? Math.round((currentStep / (steps.length - 1)) * 100) : 0;
+  const statusLabel = isPlaying
+    ? 'Läuft'
+    : isPaused
+      ? 'Pausiert'
+      : currentStep > 0 && steps.length > 0
+        ? 'Bereit zum Fortsetzen'
+        : 'Bereit';
 
   const resetPlaybackState = () => {
     if (timeoutRef.current) {
@@ -137,6 +223,16 @@ function App() {
     setIsPaused(false);
     setIsDirty(true);
     previousSortedRef.current = [];
+  };
+
+  const applyArray = (nextArray) => {
+    setBaseArray(nextArray);
+    setArraySize(Math.min(Math.max(nextArray.length, ARRAY_MIN), ARRAY_MAX));
+    setArrayInput(formatArrayInput(nextArray));
+    setArrayInputError('');
+    setVisualState(createIdleState(nextArray));
+    setComparisonRows([]);
+    resetPlaybackState();
   };
 
   const prepareAudio = () => {
@@ -175,20 +271,28 @@ function App() {
   };
 
   const handleGenerateArray = () => {
-    const nextArray = createRandomArray(arraySize);
-    setBaseArray(nextArray);
-    setVisualState(createIdleState(nextArray));
-    resetPlaybackState();
+    applyArray(createRandomArray(arraySize));
+  };
+
+  const handlePreset = (preset) => {
+    applyArray(preset.create(arraySize));
+  };
+
+  const handleApplyInput = () => {
+    const result = parseArrayInput(arrayInput);
+
+    if (result.error) {
+      setArrayInputError(result.error);
+      return;
+    }
+
+    applyArray(result.values);
   };
 
   const handleArraySizeChange = (event) => {
     const nextSize = Number(event.target.value);
-    const nextArray = createRandomArray(nextSize);
-
     setArraySize(nextSize);
-    setBaseArray(nextArray);
-    setVisualState(createIdleState(nextArray));
-    resetPlaybackState();
+    applyArray(createRandomArray(nextSize));
   };
 
   const handleAlgorithmChange = (event) => {
@@ -234,15 +338,26 @@ function App() {
     previousSortedRef.current = [];
   };
 
-  const statusLabel = isPlaying
-    ? 'Läuft'
-    : isPaused
-      ? 'Pausiert'
-      : currentStep > 0 && steps.length > 0
-        ? 'Bereit zum Fortsetzen'
-        : 'Bereit';
+  const handleCompare = () => {
+    const algorithmsToCompare = [algorithm, compareAlgorithm];
+    const rows = algorithmsToCompare.map((algorithmKey) => {
+      const start = performance.now();
+      const generatedSteps = algorithmMap[algorithmKey](baseArray);
+      const end = performance.now();
+      const finalState = generatedSteps[generatedSteps.length - 1];
 
-  const progress = steps.length > 1 ? Math.round((currentStep / (steps.length - 1)) * 100) : 0;
+      return {
+        key: algorithmKey,
+        label: getAlgorithmLabel(algorithmKey),
+        comparisons: finalState.stats.comparisons,
+        moves: finalState.stats.moves,
+        steps: finalState.stats.steps,
+        generationTimeMs: Number((end - start).toFixed(2))
+      };
+    });
+
+    setComparisonRows(rows);
+  };
 
   return (
     <div className="app-shell">
@@ -251,11 +366,11 @@ function App() {
           <p className="eyebrow">SortLab</p>
           <h1>Sortieralgorithmen sichtbar machen</h1>
           <p className="hero-copy">
-            Beobachte fünf Sortieralgorithmen Schritt für Schritt, vergleiche ihr Verhalten
-            und lies die wichtigsten Eigenschaften direkt im Dashboard.
+            Beobachte fünf Sortieralgorithmen Schritt für Schritt, arbeite mit eigenen Zahlen
+            und vergleiche zwei Verfahren auf demselben Array.
           </p>
         </div>
-        <div className="hero-metrics">
+        <div className="hero-metrics" aria-label="Aktueller Status">
           <div className="metric-chip">
             <span>Status</span>
             <strong>{statusLabel}</strong>
@@ -268,15 +383,15 @@ function App() {
       </header>
 
       <main className="dashboard">
-        <section className="panel controls-panel">
+        <section className="panel controls-panel" aria-labelledby="controls-title">
           <div className="panel-head">
-            <h2>Steuerung</h2>
+            <h2 id="controls-title">Steuerung</h2>
             <p>Array, Geschwindigkeit und Algorithmus live anpassen.</p>
           </div>
 
-          <label className="field">
+          <label className="field" htmlFor="algorithm-select">
             <span>Algorithmus</span>
-            <select value={algorithm} onChange={handleAlgorithmChange}>
+            <select id="algorithm-select" value={algorithm} onChange={handleAlgorithmChange}>
               {algorithmOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -285,9 +400,10 @@ function App() {
             </select>
           </label>
 
-          <label className="field">
+          <label className="field" htmlFor="array-size">
             <span>Array-Grösse: {arraySize}</span>
             <input
+              id="array-size"
               type="range"
               min={ARRAY_MIN}
               max={ARRAY_MAX}
@@ -296,9 +412,10 @@ function App() {
             />
           </label>
 
-          <label className="field">
+          <label className="field" htmlFor="speed">
             <span>Geschwindigkeit: {speed} ms</span>
             <input
+              id="speed"
               type="range"
               min={SPEED_MIN}
               max={SPEED_MAX}
@@ -306,6 +423,34 @@ function App() {
               onChange={(event) => setSpeed(Number(event.target.value))}
             />
           </label>
+
+          <div className="field">
+            <label htmlFor="array-input">Eigene Werte</label>
+            <textarea
+              id="array-input"
+              value={arrayInput}
+              onChange={(event) => {
+                setArrayInput(event.target.value);
+                setArrayInputError('');
+              }}
+              rows={3}
+              aria-describedby="array-input-help"
+            />
+            <p id="array-input-help" className={arrayInputError ? 'field-error' : 'field-hint'}>
+              {arrayInputError || 'Ganze Zahlen mit Komma, Leerschlag oder Semikolon trennen.'}
+            </p>
+            <button type="button" className="secondary full-width" onClick={handleApplyInput}>
+              Werte übernehmen
+            </button>
+          </div>
+
+          <div className="preset-grid" aria-label="Array Presets">
+            {presetOptions.map((preset) => (
+              <button key={preset.id} type="button" className="secondary" onClick={() => handlePreset(preset)}>
+                {preset.label}
+              </button>
+            ))}
+          </div>
 
           <div className="button-grid">
             <button type="button" className="primary" onClick={handleGenerateArray}>
@@ -323,17 +468,27 @@ function App() {
           </div>
         </section>
 
-        <section className="panel visualizer-panel">
-          <div className="panel-head">
-            <h2>Balkenvisualisierung</h2>
-            <p>Verglichene, bewegte und bereits sortierte Werte werden farblich markiert.</p>
+        <section className="panel visualizer-panel" aria-labelledby="visualizer-title">
+          <div className="panel-head split-head">
+            <div>
+              <h2 id="visualizer-title">Balkenvisualisierung</h2>
+              <p>Verglichene, bewegte und bereits sortierte Werte werden farblich markiert.</p>
+            </div>
+            <div className="step-counter">
+              Schritt {steps.length > 0 ? currentStep + 1 : 0}/{steps.length}
+            </div>
           </div>
 
-          <div className="legend">
+          <div className="legend" aria-label="Legende">
             <span><i className="legend-dot base"></i>Normal</span>
             <span><i className="legend-dot compare"></i>Vergleich</span>
             <span><i className="legend-dot swap"></i>Bewegung</span>
             <span><i className="legend-dot sorted"></i>Sortiert</span>
+          </div>
+
+          <div className="explain-box" aria-live="polite">
+            <span>Erklärmodus</span>
+            <strong>{stepDescription}</strong>
           </div>
 
           <div className="chart-card">
@@ -342,7 +497,7 @@ function App() {
                 const isCompared = visualState.compared.includes(index);
                 const isSwapped = visualState.swapped.includes(index);
                 const isSorted = visualState.sorted.includes(index);
-                const normalizedHeight = Math.max((value / tallestValue) * 100, 8);
+                const normalizedHeight = Math.max((Math.abs(value) / tallestValue) * 100, 8);
 
                 const tone = isSorted
                   ? 'sorted'
@@ -358,6 +513,7 @@ function App() {
                     <div
                       className={`bar ${tone}`}
                       style={{ height: `${normalizedHeight}%` }}
+                      aria-label={`Wert ${value} an Position ${index}`}
                     />
                   </div>
                 );
@@ -366,9 +522,9 @@ function App() {
           </div>
         </section>
 
-        <aside className="panel stats-panel">
+        <aside className="panel stats-panel" aria-labelledby="stats-title">
           <div className="panel-head">
-            <h2>Statistiken</h2>
+            <h2 id="stats-title">Statistiken</h2>
             <p>Live-Metriken auf Basis der aktuellen Sortier-Schritte.</p>
           </div>
 
@@ -392,9 +548,69 @@ function App() {
           </div>
         </aside>
 
-        <section className="panel theory-panel">
+        <section className="panel compare-panel" aria-labelledby="compare-title">
           <div className="panel-head">
-            <h2>{explanation.title}</h2>
+            <h2 id="compare-title">Vergleichsmodus</h2>
+            <p>Zwei Algorithmen sortieren dasselbe Array und werden nach Statistikwerten verglichen.</p>
+          </div>
+
+          <div className="compare-controls">
+            <label className="field" htmlFor="compare-select">
+              <span>Zweiter Algorithmus</span>
+              <select
+                id="compare-select"
+                value={compareAlgorithm}
+                onChange={(event) => setCompareAlgorithm(event.target.value)}
+              >
+                {algorithmOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button type="button" className="primary" onClick={handleCompare}>
+              Vergleich berechnen
+            </button>
+          </div>
+
+          <div className="comparison-grid">
+            {(comparisonRows.length > 0 ? comparisonRows : [algorithm, compareAlgorithm].map((key) => ({
+              key,
+              label: getAlgorithmLabel(key),
+              comparisons: '-',
+              moves: '-',
+              steps: '-',
+              generationTimeMs: '-'
+            }))).map((row) => (
+              <article className="compare-card" key={`${row.key}-${row.label}`}>
+                <h3>{row.label}</h3>
+                <dl>
+                  <div>
+                    <dt>Vergleiche</dt>
+                    <dd>{row.comparisons}</dd>
+                  </div>
+                  <div>
+                    <dt>Bewegungen</dt>
+                    <dd>{row.moves}</dd>
+                  </div>
+                  <div>
+                    <dt>Schritte</dt>
+                    <dd>{row.steps}</dd>
+                  </div>
+                  <div>
+                    <dt>Generierungszeit</dt>
+                    <dd>{row.generationTimeMs} ms</dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="panel theory-panel" aria-labelledby="theory-title">
+          <div className="panel-head">
+            <h2 id="theory-title">{explanation.title}</h2>
             <p>{explanation.summary}</p>
           </div>
 

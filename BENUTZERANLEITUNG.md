@@ -15,6 +15,7 @@ Mit SortLab kann man verstehen:
 - wie Sortieralgorithmen grundsätzlich funktionieren
 - warum manche Algorithmen schneller sind als andere
 - was Vergleiche und Bewegungen bedeuten
+- wie sich zwei Algorithmen auf demselben Array unterscheiden
 - wie sich ein unsortiertes Array Schritt für Schritt verändert
 
 ## Starten
@@ -44,7 +45,25 @@ Am Anfang wird ein zufälliges Array angezeigt. Dieses Array besteht aus Balken 
 
 Wenn du ein neues Array möchtest, klicke auf den Button zum Neu-Erzeugen des Arrays.
 
-### 2. Algorithmus auswählen
+Du kannst auch eigene Zahlen eingeben, zum Beispiel:
+
+```text
+5, 2, -1, 8
+```
+
+SortLab akzeptiert ganze Zahlen. Wenn eine Eingabe nicht passt, zeigt die App eine Fehlermeldung.
+
+### 2. Presets verwenden
+
+Mit den Preset-Buttons kannst du typische Testfälle schnell laden:
+
+- sortiert
+- umgekehrt
+- Duplikate
+- fast sortiert
+- negative Werte
+
+### 3. Algorithmus auswählen
 
 Wähle einen Sortieralgorithmus aus, zum Beispiel:
 
@@ -56,19 +75,19 @@ Quick Sort
 Heap Sort
 ```
 
-### 3. Sortierung starten
+### 4. Sortierung starten
 
 Klicke auf den Start-Button.
 
 Jetzt beginnt SortLab, das Array Schritt für Schritt zu sortieren.
 
-### 4. Geschwindigkeit ändern
+### 5. Geschwindigkeit ändern
 
 Mit dem Geschwindigkeitsregler kannst du einstellen, ob die Animation langsam oder schnell laufen soll.
 
 Langsam ist besser zum Lernen. Schnell ist besser, wenn du nur das Ergebnis sehen möchtest.
 
-### 5. Werte beobachten
+### 6. Werte beobachten
 
 Während der Sortierung zeigt SortLab Statistiken an, zum Beispiel:
 
@@ -78,6 +97,12 @@ Während der Sortierung zeigt SortLab Statistiken an, zum Beispiel:
 - Generierungszeit
 
 Diese Werte helfen dir zu verstehen, wie aufwendig ein Algorithmus und seine Visualisierung sind.
+
+Der Erklärmodus beschreibt zusätzlich den aktuellen Schritt, zum Beispiel einen Vergleich oder eine Bewegung.
+
+### 7. Algorithmen vergleichen
+
+Im Vergleichsmodus wählst du einen zweiten Algorithmus aus. Danach berechnet SortLab beide Algorithmen mit demselben Array und zeigt die Werte nebeneinander an.
 
 ## Was bedeuten die wichtigsten Begriffe?
 
@@ -106,7 +131,7 @@ Die Generierungszeit zeigt, wie lange SortLab gebraucht hat, um die Sortierung z
 1. Starte mit **Bubble Sort**, weil dieser Algorithmus leicht zu verstehen ist.
 2. Stelle die Geschwindigkeit langsam ein.
 3. Beobachte, welche Balken verglichen und bewegt werden.
-4. Vergleiche danach Bubble Sort mit Quick Sort oder Heap Sort.
+4. Nutze danach den Vergleichsmodus mit Quick Sort oder Heap Sort.
 
 ## Häufige Fragen
 
