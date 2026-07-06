@@ -1,6 +1,6 @@
 const baseStats = {
   comparisons: 0,
-  swaps: 0,
+  moves: 0,
   steps: 0
 };
 
@@ -57,7 +57,7 @@ const bubbleSort = (source) => {
 
       if (array[index] > array[index + 1]) {
         [array[index], array[index + 1]] = [array[index + 1], array[index]];
-        stats.swaps += 1;
+        stats.moves += 1;
         stats.steps += 1;
         swappedInPass = true;
 
@@ -117,7 +117,7 @@ const selectionSort = (source) => {
 
     if (minIndex !== start) {
       [array[start], array[minIndex]] = [array[minIndex], array[start]];
-      stats.swaps += 1;
+      stats.moves += 1;
       stats.steps += 1;
 
       steps.push(
@@ -178,7 +178,7 @@ const insertionSort = (source) => {
       }
 
       array[position + 1] = array[position];
-      stats.swaps += 1;
+      stats.moves += 1;
       stats.steps += 1;
 
       steps.push(
@@ -193,13 +193,19 @@ const insertionSort = (source) => {
       position -= 1;
     }
 
-    array[position + 1] = value;
-    stats.steps += 1;
+    const targetPosition = position + 1;
+    const movedToNewPosition = targetPosition !== index;
+
+    if (movedToNewPosition) {
+      array[targetPosition] = value;
+      stats.moves += 1;
+      stats.steps += 1;
+    }
 
     steps.push(
       cloneState({
         array,
-        swapped: [position + 1],
+        swapped: movedToNewPosition ? [targetPosition] : [],
         sorted: Array.from({ length: index + 1 }, (_, offset) => offset),
         stats
       })
@@ -238,7 +244,7 @@ const quickSort = (source) => {
       if (array[index] < pivotValue) {
         if (index !== storeIndex) {
           [array[index], array[storeIndex]] = [array[storeIndex], array[index]];
-          stats.swaps += 1;
+          stats.moves += 1;
           stats.steps += 1;
           pushState({ compared: [index, high], swapped: [index, storeIndex] });
         }
@@ -249,7 +255,7 @@ const quickSort = (source) => {
 
     if (storeIndex !== high) {
       [array[storeIndex], array[high]] = [array[high], array[storeIndex]];
-      stats.swaps += 1;
+      stats.moves += 1;
       stats.steps += 1;
       pushState({ swapped: [storeIndex, high] });
     }
@@ -329,7 +335,7 @@ const heapSort = (source) => {
       }
 
       [array[currentRoot], array[largest]] = [array[largest], array[currentRoot]];
-      stats.swaps += 1;
+      stats.moves += 1;
       stats.steps += 1;
       pushState({ swapped: [currentRoot, largest] });
       currentRoot = largest;
@@ -342,7 +348,7 @@ const heapSort = (source) => {
 
   for (let end = array.length - 1; end > 0; end -= 1) {
     [array[0], array[end]] = [array[end], array[0]];
-    stats.swaps += 1;
+    stats.moves += 1;
     stats.steps += 1;
     finalized.add(end);
     pushState({ swapped: [0, end] });
@@ -368,7 +374,7 @@ export const algorithmContent = {
   bubble: {
     title: 'Bubble Sort',
     summary:
-      'Bubble Sort vergleicht benachbarte Elemente und verschiebt größere Werte Schritt für Schritt nach rechts.',
+      'Bubble Sort vergleicht benachbarte Elemente und verschiebt grössere Werte Schritt für Schritt nach rechts.',
     bestCase: 'O(n) bei bereits sortiertem Array',
     averageCase: 'O(n²)',
     worstCase: 'O(n²)',
@@ -395,7 +401,7 @@ export const algorithmContent = {
   quick: {
     title: 'Quick Sort',
     summary:
-      'Quick Sort wählt ein Pivot-Element, teilt das Array in kleinere und größere Werte auf und sortiert diese Teilbereiche rekursiv.',
+      'Quick Sort wählt ein Pivot-Element, teilt das Array in kleinere und grössere Werte auf und sortiert diese Teilbereiche rekursiv.',
     bestCase: 'O(n log n)',
     averageCase: 'O(n log n)',
     worstCase: 'O(n²)',
@@ -404,7 +410,7 @@ export const algorithmContent = {
   heap: {
     title: 'Heap Sort',
     summary:
-      'Heap Sort baut zuerst einen Max-Heap auf und verschiebt danach das jeweils größte Element an das Ende des Arrays.',
+      'Heap Sort baut zuerst einen Max-Heap auf und verschiebt danach das jeweils grösste Element an das Ende des Arrays.',
     bestCase: 'O(n log n)',
     averageCase: 'O(n log n)',
     worstCase: 'O(n log n)',

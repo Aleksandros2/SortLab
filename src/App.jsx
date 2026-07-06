@@ -24,7 +24,7 @@ const createIdleState = (array) => ({
   sorted: [],
   stats: {
     comparisons: 0,
-    swaps: 0,
+    moves: 0,
     steps: 0
   }
 });
@@ -48,7 +48,7 @@ function App() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [runtimeMs, setRuntimeMs] = useState(0);
+  const [generationTimeMs, setGenerationTimeMs] = useState(0);
   const [isDirty, setIsDirty] = useState(true);
   const timeoutRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -132,7 +132,7 @@ function App() {
 
     setSteps([]);
     setCurrentStep(0);
-    setRuntimeMs(0);
+    setGenerationTimeMs(0);
     setIsPlaying(false);
     setIsPaused(false);
     setIsDirty(true);
@@ -164,7 +164,7 @@ function App() {
     const generatedSteps = selectedAlgorithm(baseArray);
     const end = performance.now();
 
-    setRuntimeMs(Number((end - start).toFixed(2)));
+    setGenerationTimeMs(Number((end - start).toFixed(2)));
     setSteps(generatedSteps);
     setCurrentStep(0);
     setVisualState(generatedSteps[0]);
@@ -227,7 +227,7 @@ function App() {
     setIsPlaying(false);
     setIsPaused(false);
     setCurrentStep(0);
-    setRuntimeMs(0);
+    setGenerationTimeMs(0);
     setSteps([]);
     setVisualState(createIdleState(baseArray));
     setIsDirty(true);
@@ -286,7 +286,7 @@ function App() {
           </label>
 
           <label className="field">
-            <span>Array-Größe: {arraySize}</span>
+            <span>Array-Grösse: {arraySize}</span>
             <input
               type="range"
               min={ARRAY_MIN}
@@ -326,13 +326,13 @@ function App() {
         <section className="panel visualizer-panel">
           <div className="panel-head">
             <h2>Balkenvisualisierung</h2>
-            <p>Verglichene, getauschte und bereits sortierte Werte werden farblich markiert.</p>
+            <p>Verglichene, bewegte und bereits sortierte Werte werden farblich markiert.</p>
           </div>
 
           <div className="legend">
             <span><i className="legend-dot base"></i>Normal</span>
             <span><i className="legend-dot compare"></i>Vergleich</span>
-            <span><i className="legend-dot swap"></i>Tausch</span>
+            <span><i className="legend-dot swap"></i>Bewegung</span>
             <span><i className="legend-dot sorted"></i>Sortiert</span>
           </div>
 
@@ -378,16 +378,16 @@ function App() {
               <strong>{visualState.stats.comparisons}</strong>
             </article>
             <article className="stat-card">
-              <span>Swaps</span>
-              <strong>{visualState.stats.swaps}</strong>
+              <span>Bewegungen</span>
+              <strong>{visualState.stats.moves}</strong>
             </article>
             <article className="stat-card">
               <span>Schritte</span>
               <strong>{visualState.stats.steps}</strong>
             </article>
             <article className="stat-card">
-              <span>Laufzeit</span>
-              <strong>{runtimeMs} ms</strong>
+              <span>Generierungszeit</span>
+              <strong>{generationTimeMs} ms</strong>
             </article>
           </div>
         </aside>

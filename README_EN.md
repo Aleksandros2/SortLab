@@ -2,27 +2,24 @@
 
 [Deutsch](./README.md) | **English**
 
-SortLab is an interactive sorting-algorithm visualizer. It shows step by step how different algorithms sort an array and makes comparisons, swaps, steps, and runtime statistics visible.
+SortLab is an interactive visualizer for sorting algorithms. It shows step by step how different algorithms sort an array and makes comparisons, movements, animation steps, and step-generation time visible.
 
 ## Project Status
 
-Current status: **finished portfolio project**
+Current status: **stable portfolio version**
 
-## Project Goal
+This version is intended as a supporting portfolio project. It is functional, tested, and buildable, but intentionally smaller than larger main projects.
 
-SortLab helps users understand sorting algorithms visually. Instead of only reading code or theory, users can observe how an array changes and compare the behaviour of different algorithms.
-
-## Features
+## Main Features
 
 - interactive sorting visualization
-- bar chart for array values
-- live speed control
-- comparison, swap, step, and runtime statistics
-- learning section with algorithm explanations
-- comparison of different sorting methods
-- modern web interface
+- random arrays with adjustable size
+- controllable animation speed
+- color highlighting for comparisons, movements, and sorted values
+- statistics for comparisons, movements, animation steps, and step-generation time
+- short learning section with time complexity and stability
 
-## Included Algorithms
+## Algorithms
 
 - Bubble Sort
 - Selection Sort
@@ -30,19 +27,11 @@ SortLab helps users understand sorting algorithms visually. Instead of only read
 - Quick Sort
 - Heap Sort
 
-## Tech Stack
-
-- React
-- Vite
-- JavaScript
-- CSS
-- GitHub
-
 ## Installation
 
 ```bash
-git clone https://github.com/Aleksandros2/sortlab.git
-cd sortlab
+git clone https://github.com/Aleksandros2/SortLab.git
+cd SortLab
 npm install
 ```
 
@@ -52,41 +41,82 @@ npm install
 npm run dev
 ```
 
-## Production Build
+## Build
 
 ```bash
 npm run build
 ```
 
-## User Guide
+## Tests
 
-A beginner-friendly guide is available here:
+```bash
+npm test
+```
 
-[German beginner guide](BENUTZERANLEITUNG.md)
+The tests cover all included sorting algorithms with empty arrays, single-item arrays, already sorted arrays, reverse sorted arrays, duplicate values, and negative values. They also check the movement statistics.
+
+Latest local results:
+
+- `npm install`: successful, with 6 reported dependency security advisories
+- `npm test`: successful, 36 tests passed
+- `npm run build`: successful, Vite build created
 
 ## Project Structure
 
 ```text
-sortlab/
+SortLab/
 |- src/
 |  |- App.jsx
 |  |- main.jsx
 |  |- styles.css
 |  `- utils/
-|     `- sortAlgorithms.js
+|     |- sortAlgorithms.js
+|     `- sortAlgorithms.test.js
 |- index.html
 |- package.json
-`- README.md
+|- README.md
+`- README_EN.md
 ```
 
-## Learning Goals
+## Technical Decisions
 
-This project was built to:
+- React and Vite are used for a simple and fast single-page app.
+- The sorting functions generate animation steps so the UI can display each state.
+- The statistic `movements` replaces the previous `swaps` label because Insertion Sort shifts values and does not only swap elements.
+- The displayed time is calculation and step-generation time. It is not a pure algorithm benchmark because animation data generation is included.
+- Vitest tests the sorting logic independently from the React interface.
 
-- improve understanding of sorting logic
-- practise visualization and state management in React
-- make algorithms understandable through practical interaction
+## Known Limitations
 
-## Portfolio Use
+- The displayed time depends on the browser, device, and current system load.
+- The app measures step generation, not pure algorithm runtime.
+- There are no automated UI or screenshot tests yet.
+- Arrays are generated randomly; custom input is not available yet.
 
-SortLab is a supporting portfolio project that demonstrates the connection between algorithms, React state, and step-by-step visualization.
+## Screenshot
+
+No screenshot is included in the repository yet.
+
+Recommendation: A good screenshot should show the desktop view during an active sort, ideally with Quick Sort or Heap Sort, visible bar visualization, statistics, and the algorithm explanation.
+
+## Demo
+
+No live demo is published at the moment.
+
+An optional GitHub Pages or Vercel demo would fit this project. Before publishing, decide whether SortLab should be shown publicly as a supporting portfolio project.
+
+## License
+
+No license is currently defined. No license file was added without an explicit license decision.
+
+## Portfolio Recommendation
+
+- Repository description: `Interactive sorting visualizer with React, Vite, animations, algorithm stats, and Vitest coverage.`
+- GitHub topics: `react`, `vite`, `javascript`, `sorting-algorithms`, `algorithm-visualizer`, `vitest`, `portfolio-project`
+- Positioning: Suitable as a supporting project, especially to show algorithm understanding, state management, and clean documentation.
+
+## User Guide
+
+A beginner-friendly German guide is available here:
+
+[German beginner guide](BENUTZERANLEITUNG.md)
