@@ -1,18 +1,22 @@
 :root {
   color-scheme: light;
-  --bg: #f4f4f5;
+  --bg: #eef4ff;
   --panel: #ffffff;
-  --panel-soft: #f8fafc;
+  --panel-soft: #f8fbff;
   --line: #d4d4d8;
   --line-strong: #a1a1aa;
   --text: #18181b;
   --muted: #52525b;
   --accent: #2563eb;
   --accent-dark: #1d4ed8;
-  --compare: #f59e0b;
-  --move: #db2777;
-  --sorted: #16a34a;
+  --accent-soft: #dbeafe;
+  --compare: #f97316;
+  --move: #be185d;
+  --sorted: #15803d;
   --base: #2563eb;
+  --cyan: #0891b2;
+  --purple: #7c3aed;
+  --warning: #d97706;
 }
 
 * {
@@ -24,7 +28,9 @@ body {
   min-height: 100vh;
   font-family: Arial, Helvetica, sans-serif;
   color: var(--text);
-  background: var(--bg);
+  background:
+    linear-gradient(180deg, #dbeafe 0, var(--bg) 220px),
+    var(--bg);
 }
 
 button,
@@ -62,6 +68,9 @@ textarea {
   justify-content: space-between;
   gap: 20px;
   padding: 20px;
+  border-top: 4px solid var(--accent);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 8px 24px rgba(30, 64, 175, 0.08);
 }
 
 .eyebrow {
@@ -102,7 +111,8 @@ h1 {
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 6px;
-  background: var(--panel-soft);
+  background: #ffffff;
+  border-left: 4px solid var(--accent);
 }
 
 .metric-chip span,
@@ -129,7 +139,7 @@ h1 {
   padding: 4px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: var(--panel);
+  background: #ffffff;
 }
 
 .mode-tabs button {
@@ -143,6 +153,7 @@ h1 {
 .mode-tabs button.active {
   color: #ffffff;
   background: var(--accent);
+  border-color: var(--accent-dark);
 }
 
 .dashboard {
@@ -160,6 +171,26 @@ h1 {
 .panel {
   padding: 16px;
   align-self: start;
+}
+
+.controls-panel {
+  border-top: 4px solid var(--accent);
+}
+
+.visualizer-panel {
+  border-top: 4px solid var(--cyan);
+}
+
+.stats-panel {
+  border-top: 4px solid var(--sorted);
+}
+
+.theory-panel {
+  border-top: 4px solid var(--warning);
+}
+
+.compare-panel {
+  border-top: 4px solid var(--purple);
 }
 
 .controls-panel,
@@ -229,7 +260,7 @@ button {
 }
 
 button:hover {
-  background: #f1f5f9;
+  background: var(--accent-soft);
   border-color: var(--accent);
   transform: translateY(-1px);
 }
@@ -262,6 +293,11 @@ button.primary.accent:hover {
 
 button.secondary {
   background: #ffffff;
+}
+
+button.secondary:hover {
+  background: #fff7ed;
+  border-color: var(--compare);
 }
 
 .full-width {
@@ -344,7 +380,7 @@ button.secondary {
   min-height: 430px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: var(--panel-soft);
+  background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
   overflow: hidden;
 }
 
@@ -376,7 +412,7 @@ button.secondary {
   width: 100%;
   min-height: 16px;
   border-radius: 3px 3px 0 0;
-  background: var(--base);
+  background: linear-gradient(180deg, #60a5fa 0%, var(--base) 100%);
   transition: height 0.18s ease, background-color 0.18s ease, transform 0.14s ease, opacity 0.14s ease;
 }
 
@@ -391,15 +427,15 @@ button.secondary {
 }
 
 .bar.compare {
-  background: var(--compare);
+  background: linear-gradient(180deg, #fdba74 0%, var(--compare) 100%);
 }
 
 .bar.swap {
-  background: var(--move);
+  background: linear-gradient(180deg, #f472b6 0%, var(--move) 100%);
 }
 
 .bar.sorted {
-  background: var(--sorted);
+  background: linear-gradient(180deg, #4ade80 0%, var(--sorted) 100%);
 }
 
 .stats-grid,
@@ -417,6 +453,30 @@ button.secondary {
   border-radius: 8px;
   background: var(--panel-soft);
   transition: border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.stat-card:nth-child(1) {
+  border-left: 4px solid var(--accent);
+}
+
+.stat-card:nth-child(2) {
+  border-left: 4px solid var(--move);
+}
+
+.stat-card:nth-child(3) {
+  border-left: 4px solid var(--compare);
+}
+
+.stat-card:nth-child(4) {
+  border-left: 4px solid var(--sorted);
+}
+
+.info-card {
+  border-left: 4px solid var(--warning);
+}
+
+.compare-card {
+  border-left: 4px solid var(--purple);
 }
 
 .stat-card:hover,
@@ -549,5 +609,21 @@ button.secondary {
 
   .chart {
     gap: 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+
+  button:hover,
+  .bar-wrap:hover .bar {
+    transform: none;
   }
 }
