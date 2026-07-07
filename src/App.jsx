@@ -54,6 +54,24 @@ const getAlgorithmLabel = (value) =>
 
 const clampArraySize = (size) => Math.min(Math.max(size, ARRAY_MIN), ARRAY_MAX);
 
+const comparisonMetricLabels = [
+  { key: 'comparisons', label: 'Vergleiche' },
+  { key: 'moves', label: 'Bewegungen' },
+  { key: 'steps', label: 'Schritte' },
+  { key: 'generationTimeMs', label: 'Zeit' }
+];
+
+const createComparisonPlaceholder = (key) => ({
+  key,
+  label: getAlgorithmLabel(key),
+  comparisons: '-',
+  moves: '-',
+  steps: '-',
+  generationTimeMs: '-'
+});
+
+const getNumericMetric = (row, key) => (typeof row[key] === 'number' ? row[key] : 0);
+
 function App() {
   const initialArray = useMemo(() => createRandomArray(DEFAULT_SIZE), []);
   const [activeTab, setActiveTab] = useState('visualizer');
@@ -158,6 +176,20 @@ function App() {
       : currentStep > 0 && steps.length > 0
         ? 'Bereit zum Fortsetzen'
         : 'Bereit';
+  const comparisonDisplayRows = useMemo(
+    () => [compareLeftAlgorithm, compareRightAlgorithm].map((algorithmKey) => (
+      comparisonRows.find((row) => row.key === algorithmKey) ?? createComparisonPlaceholder(algorithmKey)
+    )),
+    [compareLeftAlgorithm, compareRightAlgorithm, comparisonRows]
+  );
+  const hasComparisonResult = comparisonRows.length > 0;
+  const comparisonMaxValues = useMemo(() => comparisonMetricLabels.reduce((maxValues, metric) => ({
+    ...maxValues,
+    [metric.key]: Math.max(
+      ...comparisonDisplayRows.map((row) => getNumericMetric(row, metric.key)),
+      1
+    )
+  }), {}), [comparisonDisplayRows]);
 
   const resetPlaybackState = () => {
     if (timeoutRef.current) {
@@ -531,7 +563,10 @@ function App() {
                 <select
                   id="compare-left-select"
                   value={compareLeftAlgorithm}
-                  onChange={(event) => setCompareLeftAlgorithm(event.target.value)}
+                  onChange={(event) => {
+                    setCompareLeftAlgorithm(event.target.value);
+                    setComparisonRows([]);
+                  }}
                 >
                   {algorithmOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -545,7 +580,10 @@ function App() {
                 <select
                   id="compare-right-select"
                   value={compareRightAlgorithm}
-                  onChange={(event) => setCompareRightAlgorithm(event.target.value)}
+                  onChange={(event) => {
+                    setCompareRightAlgorithm(event.target.value);
+                    setComparisonRows([]);
+                  }}
                 >
                   {algorithmOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -587,15 +625,8 @@ function App() {
             </div>
 
             <div className="comparison-grid">
-              {(comparisonRows.length > 0 ? comparisonRows : [compareLeftAlgorithm, compareRightAlgorithm].map((key) => ({
-                key,
-                label: getAlgorithmLabel(key),
-                comparisons: '-',
-                moves: '-',
-                steps: '-',
-                generationTimeMs: '-'
-              }))).map((row) => (
-                <article className="compare-card" key={`${row.key}-${row.label}`}>
+              {comparisonDisplayRows.map((row, rowIndex) => (
+                <article className="compare-card" key={`${row.key}-${rowIndex}`}>
                   <h3>{row.label}</h3>
                   <dl>
                     <div>
@@ -615,6 +646,23 @@ function App() {
                       <dd>{row.generationTimeMs} ms</dd>
                     </div>
                   </dl>
+                  {hasComparisonResult && (
+                    <div className="compare-mini-chart" aria-label={`Kennzahlen fÃ¼r ${row.label}`}>
+                      {comparisonMetricLabels.map((metric) => {
+                        const value = getNumericMetric(row, metric.key);
+                        const width = Math.max((value / comparisonMaxValues[metric.key]) * 100, value > 0 ? 6 : 0);
+
+                        return (
+                          <div className="compare-mini-row" key={metric.key}>
+                            <span>{metric.label}</span>
+                            <div className="compare-mini-track">
+                              <i style={{ width: `${width}%` }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </article>
               ))}
             </div>
