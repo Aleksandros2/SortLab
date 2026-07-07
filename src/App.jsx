@@ -53,13 +53,7 @@ const getAlgorithmLabel = (value) =>
   algorithmOptions.find((option) => option.value === value)?.label ?? value;
 
 const clampArraySize = (size) => Math.min(Math.max(size, ARRAY_MIN), ARRAY_MAX);
-
-const comparisonMetricLabels = [
-  { key: 'comparisons', label: 'Vergleiche' },
-  { key: 'moves', label: 'Bewegungen' },
-  { key: 'steps', label: 'Schritte' },
-  { key: 'generationTimeMs', label: 'Zeit' }
-];
+const getTallestArrayValue = (array) => Math.max(...array.map((value) => Math.abs(value)), 1);
 
 const createComparisonPlaceholder = (key) => ({
   key,
@@ -67,10 +61,9 @@ const createComparisonPlaceholder = (key) => ({
   comparisons: '-',
   moves: '-',
   steps: '-',
-  generationTimeMs: '-'
+  generationTimeMs: '-',
+  resultArray: []
 });
-
-const getNumericMetric = (row, key) => (typeof row[key] === 'number' ? row[key] : 0);
 
 function App() {
   const initialArray = useMemo(() => createRandomArray(DEFAULT_SIZE), []);
@@ -165,7 +158,7 @@ function App() {
 
   const explanation = useMemo(() => algorithmContent[algorithm], [algorithm]);
   const tallestValue = useMemo(
-    () => Math.max(...visualState.array.map((value) => Math.abs(value)), 1),
+    () => getTallestArrayValue(visualState.array),
     [visualState.array]
   );
   const progress = steps.length > 1 ? Math.round((currentStep / (steps.length - 1)) * 100) : 0;
@@ -182,14 +175,6 @@ function App() {
     )),
     [compareLeftAlgorithm, compareRightAlgorithm, comparisonRows]
   );
-  const hasComparisonResult = comparisonRows.length > 0;
-  const comparisonMaxValues = useMemo(() => comparisonMetricLabels.reduce((maxValues, metric) => ({
-    ...maxValues,
-    [metric.key]: Math.max(
-      ...comparisonDisplayRows.map((row) => getNumericMetric(row, metric.key)),
-      1
-    )
-  }), {}), [comparisonDisplayRows]);
 
   const resetPlaybackState = () => {
     if (timeoutRef.current) {
@@ -311,7 +296,8 @@ function App() {
         comparisons: finalState.stats.comparisons,
         moves: finalState.stats.moves,
         steps: finalState.stats.steps,
-        generationTimeMs: Number((end - start).toFixed(2))
+        generationTimeMs: Number((end - start).toFixed(2)),
+        resultArray: finalState.array
       };
     });
 
@@ -628,6 +614,26 @@ function App() {
               {comparisonDisplayRows.map((row, rowIndex) => (
                 <article className="compare-card" key={`${row.key}-${rowIndex}`}>
                   <h3>{row.label}</h3>
+                  {row.resultArray.length > 0 && (() => {
+                    const tallestResultValue = getTallestArrayValue(row.resultArray);
+
+                    return (
+                      <div className="compare-result-chart" aria-label={`Sortiertes Ergebnis: ${row.label}`}>
+                        {row.resultArray.map((value, index) => {
+                          const normalizedHeight = Math.max((Math.abs(value) / tallestResultValue) * 100, 8);
+
+                          return (
+                            <i
+                              key={`${row.key}-${index}-${value}`}
+                              style={{ height: `${normalizedHeight}%` }}
+                              title={`Wert ${value}`}
+                              aria-label={`Wert ${value} an Position ${index}`}
+                            />
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                   <dl>
                     <div>
                       <dt>Vergleiche</dt>
@@ -646,23 +652,6 @@ function App() {
                       <dd>{row.generationTimeMs} ms</dd>
                     </div>
                   </dl>
-                  {hasComparisonResult && (
-                    <div className="compare-mini-chart" aria-label={`Kennzahlen fÃ¼r ${row.label}`}>
-                      {comparisonMetricLabels.map((metric) => {
-                        const value = getNumericMetric(row, metric.key);
-                        const width = Math.max((value / comparisonMaxValues[metric.key]) * 100, value > 0 ? 6 : 0);
-
-                        return (
-                          <div className="compare-mini-row" key={metric.key}>
-                            <span>{metric.label}</span>
-                            <div className="compare-mini-track">
-                              <i style={{ width: `${width}%` }} />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
                 </article>
               ))}
             </div>
