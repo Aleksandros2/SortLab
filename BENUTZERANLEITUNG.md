@@ -23,7 +23,7 @@ Mit SortLab kann man verstehen:
 Wenn du das Projekt lokal starten willst:
 
 ```bash
-git clone https://github.com/Aleksandros2/SortLab.git
+git clone https://github.com/AleksZyro/SortLab.git
 cd SortLab
 npm install
 npm run dev

@@ -52,7 +52,7 @@ The displayed time is called **Calculation and step-generation time**. It includ
 ## Installation
 
 ```bash
-git clone https://github.com/Aleksandros2/SortLab.git
+git clone https://github.com/AleksZyro/SortLab.git
 cd SortLab
 npm ci
 ```
@@ -90,11 +90,11 @@ Run locally:
 
 GitHub Pages is prepared through `.github/workflows/deploy-pages.yml`. The workflow builds with the base path `/SortLab/`, uploads `dist` as a Pages artifact, and deploys to GitHub Pages.
 
-Planned live demo link:
+Live demo:
 
-[https://aleksandros2.github.io/SortLab/](https://aleksandros2.github.io/SortLab/)
+[https://alekszyro.github.io/SortLab/](https://alekszyro.github.io/SortLab/)
 
-For the workflow to deploy, this GitHub setting still needs to be configured manually:
+If deployment stops working later, this GitHub setting should be checked:
 
 `Settings → Pages → Build and deployment → Source → GitHub Actions`
 
@@ -107,8 +107,8 @@ SortLab/
 |     |- ci.yml
 |     `- deploy-pages.yml
 |- docs/
-|  `- screenshots/
-|     `- sortlab-overview.png
+|  `- assets/
+|     `- sortlab-demo.png
 |- src/
 |  |- App.jsx
 |  |- main.jsx
@@ -144,7 +144,11 @@ SortLab/
 
 The screenshot was created from the built application after successful `npm ci`, `npm test`, and `npm run build`.
 
-![SortLab overview](docs/screenshots/sortlab-overview.png)
+![SortLab overview](docs/assets/sortlab-demo.png)
+
+## Demo Video
+
+The repository currently does not include a demo video or GIF. If a short demo is added later, it should stay around 10 to 20 seconds and remain small enough to avoid unnecessary repository size.
 
 ## License Status
 
@@ -153,7 +157,7 @@ No open-source license has been granted. The source code is publicly viewable, b
 ## Repository Metadata Suggestion
 
 - Description: `Interactive React visualizer for comparing sorting algorithms and their operations.`
-- Website: `https://aleksandros2.github.io/SortLab/`
+- Website: `https://alekszyro.github.io/SortLab/`
 
 ## User Guide
 
