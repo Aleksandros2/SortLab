@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { formatArrayInput, parseArrayInput } from './utils/arrayInput';
-import { algorithmContent, algorithmMap } from './utils/sortAlgorithms';
+import { algorithmContent, algorithmMap, summarizeAlgorithmRun } from './utils/sortAlgorithms';
 
 const ARRAY_MIN = 8;
 const ARRAY_MAX = 64;
@@ -9,13 +9,7 @@ const SPEED_MAX = 300;
 const DEFAULT_SIZE = 28;
 const DEFAULT_SPEED = 110;
 
-const algorithmOptions = [
-  { value: 'bubble', label: 'Bubble Sort' },
-  { value: 'selection', label: 'Selection Sort' },
-  { value: 'insertion', label: 'Insertion Sort' },
-  { value: 'quick', label: 'Quick Sort' },
-  { value: 'heap', label: 'Heap Sort' }
-];
+const algorithmKeys = Object.keys(algorithmMap);
 
 const presetOptions = [
   {
@@ -50,14 +44,12 @@ const createIdleState = (array) => ({
 });
 
 const getAlgorithmLabel = (value) =>
-  algorithmOptions.find((option) => option.value === value)?.label ?? value;
+  algorithmContent[value]?.title ?? value;
 
-const clampArraySize = (size) => Math.min(Math.max(size, ARRAY_MIN), ARRAY_MAX);
 const getTallestArrayValue = (array) => Math.max(...array.map((value) => Math.abs(value)), 1);
 
 const createComparisonPlaceholder = (key) => ({
   key,
-  label: getAlgorithmLabel(key),
   comparisons: '-',
   moves: '-',
   steps: '-',
@@ -65,12 +57,94 @@ const createComparisonPlaceholder = (key) => ({
   resultArray: []
 });
 
+const statMetrics = [
+  ['comparisons', 'Vergleiche'],
+  ['moves', 'Bewegungen'],
+  ['steps', 'Schritte']
+];
+
+const theoryMetrics = [
+  ['bestCase', 'Best Case'],
+  ['averageCase', 'Average Case'],
+  ['worstCase', 'Worst Case'],
+  ['stability', 'Stabilität']
+];
+
+const AlgorithmSelect = ({ id, label, value, onChange }) => (
+  <label className="field" htmlFor={id}>
+    <span>{label}</span>
+    <select id={id} value={value} onChange={(event) => onChange(event.target.value)}>
+      {algorithmKeys.map((key) => (
+        <option key={key} value={key}>
+          {getAlgorithmLabel(key)}
+        </option>
+      ))}
+    </select>
+  </label>
+);
+
+const RangeField = ({ id, label, value, displayValue = value, min, max, onChange }) => (
+  <label className="field" htmlFor={id}>
+    <span>{label}: {displayValue}</span>
+    <input
+      id={id}
+      type="range"
+      min={min}
+      max={max}
+      value={value}
+      onChange={(event) => onChange(Number(event.target.value))}
+    />
+  </label>
+);
+
+const PresetButtons = ({ size, onApply, includeRandom = false }) => (
+  <>
+    {includeRandom && (
+      <button type="button" className="secondary" onClick={() => onApply(createRandomArray(size))}>
+        Zufälliges Array
+      </button>
+    )}
+    {presetOptions.map((preset) => (
+      <button key={preset.id} type="button" className="secondary" onClick={() => onApply(preset.create(size))}>
+        {preset.label}
+      </button>
+    ))}
+  </>
+);
+
+const MetricCards = ({ metrics, values, className }) => (
+  <>
+    {metrics.map(([key, label]) => (
+      <article className={className} key={key}>
+        <span>{label}</span>
+        <strong>{values[key]}</strong>
+      </article>
+    ))}
+  </>
+);
+
+const CompactBars = ({ values, idPrefix }) => {
+  const tallestValue = getTallestArrayValue(values);
+
+  return (
+    <div className="compare-result-chart" aria-label="Sortiertes Ergebnis">
+      {values.map((value, index) => (
+        <i
+          key={`${idPrefix}-${index}-${value}`}
+          style={{ height: `${Math.max((Math.abs(value) / tallestValue) * 100, 8)}%` }}
+          title={`Wert ${value}`}
+          aria-label={`Wert ${value} an Position ${index}`}
+        />
+      ))}
+    </div>
+  );
+};
+
 function App() {
   const initialArray = useMemo(() => createRandomArray(DEFAULT_SIZE), []);
   const [activeTab, setActiveTab] = useState('visualizer');
 
   const [algorithm, setAlgorithm] = useState('bubble');
-  const [arraySize, setArraySize] = useState(DEFAULT_SIZE);
   const [speed, setSpeed] = useState(DEFAULT_SPEED);
   const [baseArray, setBaseArray] = useState(initialArray);
   const [arrayInput, setArrayInput] = useState(() => formatArrayInput(initialArray));
@@ -79,19 +153,15 @@ function App() {
   const [steps, setSteps] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
   const [generationTimeMs, setGenerationTimeMs] = useState(0);
   const [isDirty, setIsDirty] = useState(true);
 
   const [compareLeftAlgorithm, setCompareLeftAlgorithm] = useState('bubble');
   const [compareRightAlgorithm, setCompareRightAlgorithm] = useState('quick');
-  const [compareArraySize, setCompareArraySize] = useState(DEFAULT_SIZE);
   const [compareArray, setCompareArray] = useState(() => createRandomArray(DEFAULT_SIZE));
   const [comparisonRows, setComparisonRows] = useState([]);
 
   const timeoutRef = useRef(null);
-  const audioContextRef = useRef(null);
-  const previousSortedRef = useRef([]);
 
   useEffect(() => {
     if (!isPlaying || steps.length === 0) {
@@ -100,7 +170,6 @@ function App() {
 
     if (currentStep >= steps.length - 1) {
       setIsPlaying(false);
-      setIsPaused(false);
       return undefined;
     }
 
@@ -121,46 +190,14 @@ function App() {
     }
   }, [currentStep, steps]);
 
-  useEffect(() => {
-    const currentSorted = visualState.sorted;
-    const previousSorted = previousSortedRef.current;
-
-    if (!isPlaying) {
-      previousSortedRef.current = currentSorted;
-      return;
-    }
-
-    const newlySorted = currentSorted.filter((index) => !previousSorted.includes(index));
-    if (newlySorted.length > 0 && audioContextRef.current) {
-      const audioContext = audioContextRef.current;
-      const now = audioContext.currentTime;
-
-      newlySorted.forEach((_, order) => {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        const startAt = now + (order * 0.035);
-
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(620 + (order * 45), startAt);
-        gainNode.gain.setValueAtTime(0.0001, startAt);
-        gainNode.gain.exponentialRampToValueAtTime(0.08, startAt + 0.01);
-        gainNode.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.14);
-
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        oscillator.start(startAt);
-        oscillator.stop(startAt + 0.15);
-      });
-    }
-
-    previousSortedRef.current = currentSorted;
-  }, [isPlaying, visualState.sorted]);
-
   const explanation = useMemo(() => algorithmContent[algorithm], [algorithm]);
+  const arraySize = baseArray.length;
+  const compareArraySize = compareArray.length;
   const tallestValue = useMemo(
     () => getTallestArrayValue(visualState.array),
     [visualState.array]
   );
+  const isPaused = !isPlaying && currentStep > 0 && currentStep < steps.length - 1;
   const progress = steps.length > 1 ? Math.round((currentStep / (steps.length - 1)) * 100) : 0;
   const statusLabel = isPlaying
     ? 'Läuft'
@@ -185,14 +222,11 @@ function App() {
     setCurrentStep(0);
     setGenerationTimeMs(0);
     setIsPlaying(false);
-    setIsPaused(false);
     setIsDirty(true);
-    previousSortedRef.current = [];
   };
 
   const applyArray = (nextArray) => {
     setBaseArray(nextArray);
-    setArraySize(clampArraySize(nextArray.length));
     setArrayInput(formatArrayInput(nextArray));
     setArrayInputError('');
     setVisualState(createIdleState(nextArray));
@@ -201,27 +235,7 @@ function App() {
 
   const applyCompareArray = (nextArray) => {
     setCompareArray(nextArray);
-    setCompareArraySize(clampArraySize(nextArray.length));
     setComparisonRows([]);
-  };
-
-  const prepareAudio = () => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) {
-      return;
-    }
-
-    if (!audioContextRef.current) {
-      audioContextRef.current = new AudioContextClass();
-    }
-
-    if (audioContextRef.current.state === 'suspended') {
-      audioContextRef.current.resume().catch(() => {});
-    }
   };
 
   const generateSteps = () => {
@@ -235,7 +249,6 @@ function App() {
     setCurrentStep(0);
     setVisualState(generatedSteps[0]);
     setIsDirty(false);
-    previousSortedRef.current = generatedSteps[0]?.sorted ?? [];
 
     return generatedSteps;
   };
@@ -252,7 +265,6 @@ function App() {
   };
 
   const handleStart = () => {
-    prepareAudio();
     const preparedSteps = !steps.length || isDirty ? generateSteps() : steps;
     if (preparedSteps.length <= 1) {
       return;
@@ -261,47 +273,22 @@ function App() {
     if (currentStep >= preparedSteps.length - 1) {
       setCurrentStep(0);
       setVisualState(preparedSteps[0]);
-      previousSortedRef.current = preparedSteps[0]?.sorted ?? [];
     }
 
     setIsPlaying(true);
-    setIsPaused(false);
   };
 
   const handleReset = () => {
-    if (timeoutRef.current) {
-      window.clearTimeout(timeoutRef.current);
-    }
-
-    setIsPlaying(false);
-    setIsPaused(false);
-    setCurrentStep(0);
-    setGenerationTimeMs(0);
-    setSteps([]);
+    resetPlaybackState();
     setVisualState(createIdleState(baseArray));
-    setIsDirty(true);
-    previousSortedRef.current = [];
   };
 
   const handleCompare = () => {
-    const rows = [compareLeftAlgorithm, compareRightAlgorithm].map((algorithmKey) => {
-      const start = performance.now();
-      const generatedSteps = algorithmMap[algorithmKey](compareArray);
-      const end = performance.now();
-      const finalState = generatedSteps[generatedSteps.length - 1];
-
-      return {
-        key: algorithmKey,
-        label: getAlgorithmLabel(algorithmKey),
-        comparisons: finalState.stats.comparisons,
-        moves: finalState.stats.moves,
-        steps: finalState.stats.steps,
-        generationTimeMs: Number((end - start).toFixed(2)),
-        resultArray: finalState.array
-      };
-    });
-
-    setComparisonRows(rows);
+    setComparisonRows(
+      [compareLeftAlgorithm, compareRightAlgorithm].map((algorithmKey) => ({
+        ...summarizeAlgorithmRun(algorithmKey, compareArray)
+      }))
+    );
   };
 
   return (
@@ -351,48 +338,35 @@ function App() {
               <p>Array, Geschwindigkeit und Algorithmus für die Simulation anpassen.</p>
             </div>
 
-            <label className="field" htmlFor="algorithm-select">
-              <span>Algorithmus</span>
-              <select
-                id="algorithm-select"
-                value={algorithm}
-                onChange={(event) => {
-                  setAlgorithm(event.target.value);
-                  setVisualState(createIdleState(baseArray));
-                  resetPlaybackState();
-                }}
-              >
-                {algorithmOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <AlgorithmSelect
+              id="algorithm-select"
+              label="Algorithmus"
+              value={algorithm}
+              onChange={(nextAlgorithm) => {
+                setAlgorithm(nextAlgorithm);
+                setVisualState(createIdleState(baseArray));
+                resetPlaybackState();
+              }}
+            />
 
-            <label className="field" htmlFor="array-size">
-              <span>Array-Grösse: {arraySize}</span>
-              <input
-                id="array-size"
-                type="range"
-                min={ARRAY_MIN}
-                max={ARRAY_MAX}
-                value={arraySize}
-                onChange={(event) => applyArray(createRandomArray(Number(event.target.value)))}
-              />
-            </label>
+            <RangeField
+              id="array-size"
+              label="Array-Grösse"
+              value={arraySize}
+              min={ARRAY_MIN}
+              max={ARRAY_MAX}
+              onChange={(size) => applyArray(createRandomArray(size))}
+            />
 
-            <label className="field" htmlFor="speed">
-              <span>Geschwindigkeit: {speed} ms</span>
-              <input
-                id="speed"
-                type="range"
-                min={SPEED_MIN}
-                max={SPEED_MAX}
-                value={speed}
-                onChange={(event) => setSpeed(Number(event.target.value))}
-              />
-            </label>
+            <RangeField
+              id="speed"
+              label="Geschwindigkeit"
+              value={speed}
+              displayValue={`${speed} ms`}
+              min={SPEED_MIN}
+              max={SPEED_MAX}
+              onChange={setSpeed}
+            />
 
             <div className="field">
               <label htmlFor="array-input">Eigene Werte</label>
@@ -409,24 +383,20 @@ function App() {
               <p id="array-input-help" className={arrayInputError ? 'field-error' : 'field-hint'}>
                 {arrayInputError || 'Ganze Zahlen mit Komma, Leerschlag oder Semikolon trennen.'}
               </p>
-              <button type="button" className="secondary full-width" onClick={handleApplyInput}>
+              <button type="button" className="secondary" onClick={handleApplyInput}>
                 Werte übernehmen
               </button>
             </div>
 
             <div className="preset-grid" aria-label="Array Presets">
-              {presetOptions.map((preset) => (
-                <button key={preset.id} type="button" className="secondary" onClick={() => applyArray(preset.create(arraySize))}>
-                  {preset.label}
-                </button>
-              ))}
+              <PresetButtons size={arraySize} onApply={applyArray} />
             </div>
 
             <div className="button-grid">
               <button type="button" className="primary" onClick={() => applyArray(createRandomArray(arraySize))}>
                 Zufälliges Array
               </button>
-              <button type="button" className="primary accent" onClick={handleStart}>
+              <button type="button" className="primary" onClick={handleStart}>
                 Sortierung starten
               </button>
               <button type="button" className="secondary" onClick={() => setIsPlaying(false)} disabled={!isPlaying}>
@@ -439,7 +409,7 @@ function App() {
           </section>
 
           <section className="panel visualizer-panel" aria-labelledby="visualizer-title">
-            <div className="panel-head split-head">
+            <div className="panel-head">
               <div>
                 <h2 id="visualizer-title">Balkenvisualisierung</h2>
               </div>
@@ -490,21 +460,10 @@ function App() {
             </div>
 
             <div className="stats-grid">
+              <MetricCards metrics={statMetrics} values={visualState.stats} className="stat-card" />
               <article className="stat-card">
-                <span>Vergleiche</span>
-                <strong>{visualState.stats.comparisons}</strong>
-              </article>
-              <article className="stat-card">
-                <span>Bewegungen</span>
-                <strong>{visualState.stats.moves}</strong>
-              </article>
-              <article className="stat-card">
-                <span>Schritte</span>
-                <strong>{visualState.stats.steps}</strong>
-              </article>
-              <article className="stat-card">
-              <span>Berechnungs- und Schrittgenerierungszeit</span>
-              <strong>{generationTimeMs} ms</strong>
+                <span>Berechnungs- und Schrittgenerierungszeit</span>
+                <strong>{generationTimeMs} ms</strong>
               </article>
             </div>
           </aside>
@@ -516,22 +475,7 @@ function App() {
             </div>
 
             <div className="theory-grid">
-              <article className="info-card">
-                <span>Best Case</span>
-                <strong>{explanation.bestCase}</strong>
-              </article>
-              <article className="info-card">
-                <span>Average Case</span>
-                <strong>{explanation.averageCase}</strong>
-              </article>
-              <article className="info-card">
-                <span>Worst Case</span>
-                <strong>{explanation.worstCase}</strong>
-              </article>
-              <article className="info-card">
-                <span>Stabilität</span>
-                <strong>{explanation.stability}</strong>
-              </article>
+              <MetricCards metrics={theoryMetrics} values={explanation} className="info-card" />
             </div>
           </section>
         </main>
@@ -544,65 +488,39 @@ function App() {
             </div>
 
             <div className="compare-controls">
-              <label className="field" htmlFor="compare-left-select">
-                <span>Algorithmus A</span>
-                <select
-                  id="compare-left-select"
-                  value={compareLeftAlgorithm}
-                  onChange={(event) => {
-                    setCompareLeftAlgorithm(event.target.value);
-                    setComparisonRows([]);
-                  }}
-                >
-                  {algorithmOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="field" htmlFor="compare-right-select">
-                <span>Algorithmus B</span>
-                <select
-                  id="compare-right-select"
-                  value={compareRightAlgorithm}
-                  onChange={(event) => {
-                    setCompareRightAlgorithm(event.target.value);
-                    setComparisonRows([]);
-                  }}
-                >
-                  {algorithmOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="field" htmlFor="compare-array-size">
-                <span>Array-Grösse: {compareArraySize}</span>
-                <input
-                  id="compare-array-size"
-                  type="range"
-                  min={ARRAY_MIN}
-                  max={ARRAY_MAX}
-                  value={compareArraySize}
-                  onChange={(event) => applyCompareArray(createRandomArray(Number(event.target.value)))}
-                />
-              </label>
+              <AlgorithmSelect
+                id="compare-left-select"
+                label="Algorithmus A"
+                value={compareLeftAlgorithm}
+                onChange={(value) => {
+                  setCompareLeftAlgorithm(value);
+                  setComparisonRows([]);
+                }}
+              />
+              <AlgorithmSelect
+                id="compare-right-select"
+                label="Algorithmus B"
+                value={compareRightAlgorithm}
+                onChange={(value) => {
+                  setCompareRightAlgorithm(value);
+                  setComparisonRows([]);
+                }}
+              />
+              <RangeField
+                id="compare-array-size"
+                label="Array-Grösse"
+                value={compareArraySize}
+                min={ARRAY_MIN}
+                max={ARRAY_MAX}
+                onChange={(size) => applyCompareArray(createRandomArray(size))}
+              />
               <button type="button" className="primary" onClick={handleCompare}>
                 Vergleich berechnen
               </button>
             </div>
 
             <div className="compare-presets" aria-label="Vergleichs-Array Presets">
-              <button type="button" className="secondary" onClick={() => applyCompareArray(createRandomArray(compareArraySize))}>
-                Zufälliges Array
-              </button>
-              {presetOptions.map((preset) => (
-                <button key={preset.id} type="button" className="secondary" onClick={() => applyCompareArray(preset.create(compareArraySize))}>
-                  {preset.label}
-                </button>
-              ))}
+              <PresetButtons size={compareArraySize} onApply={applyCompareArray} includeRandom />
             </div>
 
             <div className="array-preview">
@@ -613,40 +531,15 @@ function App() {
             <div className="comparison-grid">
               {comparisonDisplayRows.map((row, rowIndex) => (
                 <article className="compare-card" key={`${row.key}-${rowIndex}`}>
-                  <h3>{row.label}</h3>
-                  {row.resultArray.length > 0 && (() => {
-                    const tallestResultValue = getTallestArrayValue(row.resultArray);
-
-                    return (
-                      <div className="compare-result-chart" aria-label={`Sortiertes Ergebnis: ${row.label}`}>
-                        {row.resultArray.map((value, index) => {
-                          const normalizedHeight = Math.max((Math.abs(value) / tallestResultValue) * 100, 8);
-
-                          return (
-                            <i
-                              key={`${row.key}-${index}-${value}`}
-                              style={{ height: `${normalizedHeight}%` }}
-                              title={`Wert ${value}`}
-                              aria-label={`Wert ${value} an Position ${index}`}
-                            />
-                          );
-                        })}
-                      </div>
-                    );
-                  })()}
+                  <h3>{getAlgorithmLabel(row.key)}</h3>
+                  {row.resultArray.length > 0 && <CompactBars values={row.resultArray} idPrefix={row.key} />}
                   <dl>
-                    <div>
-                      <dt>Vergleiche</dt>
-                      <dd>{row.comparisons}</dd>
-                    </div>
-                    <div>
-                      <dt>Bewegungen</dt>
-                      <dd>{row.moves}</dd>
-                    </div>
-                    <div>
-                      <dt>Schritte</dt>
-                      <dd>{row.steps}</dd>
-                    </div>
+                    {statMetrics.map(([key, label]) => (
+                      <div key={key}>
+                        <dt>{label}</dt>
+                        <dd>{row[key]}</dd>
+                      </div>
+                    ))}
                     <div>
                       <dt>Berechnungs- und Schrittgenerierungszeit</dt>
                       <dd>{row.generationTimeMs} ms</dd>
