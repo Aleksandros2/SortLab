@@ -13,17 +13,24 @@ const cloneState = ({ array, compared = [], swapped = [], sorted = [], stats }) 
 });
 
 const sortedFromSet = (set) => Array.from(set).sort((left, right) => left - right);
+const sortedHead = (length) => Array.from({ length }, (_, index) => index);
+const sortedTail = (array, length) =>
+  Array.from({ length }, (_, offset) => array.length - 1 - offset);
 
 const markAllSorted = (array, stats) =>
   cloneState({
     array,
-    sorted: array.map((_, index) => index),
+    sorted: sortedHead(array.length),
     stats
   });
 
 const pushFinalStateIfNeeded = (steps, array, stats) => {
+  if (steps.length === 0) {
+    return [markAllSorted(array, stats)];
+  }
+
   const lastStep = steps[steps.length - 1];
-  const allSorted = array.map((_, index) => index);
+  const allSorted = sortedHead(array.length);
   const alreadyComplete =
     lastStep.sorted.length === allSorted.length &&
     lastStep.sorted.every((value, index) => value === allSorted[index]);
@@ -35,80 +42,92 @@ const pushFinalStateIfNeeded = (steps, array, stats) => {
   return steps;
 };
 
-const bubbleSort = (source) => {
-  const array = [...source];
-  const stats = { ...baseStats };
-  const steps = [cloneState({ array, stats })];
+const createRecorder = (array, stats, { recordSteps = true, getSorted = () => [] } = {}) => {
+  const steps = recordSteps ? [cloneState({ array, stats })] : [];
 
-  for (let end = array.length - 1; end > 0; end -= 1) {
-    let swappedInPass = false;
-
-    for (let index = 0; index < end; index += 1) {
-      stats.comparisons += 1;
-      stats.steps += 1;
-      steps.push(
-        cloneState({
-          array,
-          compared: [index, index + 1],
-          sorted: Array.from({ length: array.length - 1 - end }, (_, offset) => array.length - 1 - offset),
-          stats
-        })
-      );
-
-      if (array[index] > array[index + 1]) {
-        [array[index], array[index + 1]] = [array[index + 1], array[index]];
-        stats.moves += 1;
-        stats.steps += 1;
-        swappedInPass = true;
-
-        steps.push(
-          cloneState({
-            array,
-            compared: [index, index + 1],
-            swapped: [index, index + 1],
-            sorted: Array.from({ length: array.length - 1 - end }, (_, offset) => array.length - 1 - offset),
-            stats
-          })
-        );
-      }
+  const push = (overrides = {}) => {
+    if (!recordSteps) {
+      return;
     }
 
     steps.push(
       cloneState({
         array,
-        sorted: Array.from({ length: array.length - end }, (_, offset) => array.length - 1 - offset),
-        stats
+        sorted: getSorted(),
+        stats,
+        ...overrides
       })
     );
+  };
+
+  return {
+    steps,
+    push,
+    finish: () => pushFinalStateIfNeeded(steps, array, stats)
+  };
+};
+
+const countComparison = (stats) => {
+  stats.comparisons += 1;
+  stats.steps += 1;
+};
+
+const countMove = (stats) => {
+  stats.moves += 1;
+  stats.steps += 1;
+};
+
+const bubbleSort = (source, options = {}) => {
+  const array = [...source];
+  const stats = { ...baseStats };
+  const recorder = createRecorder(array, stats, options);
+
+  for (let end = array.length - 1; end > 0; end -= 1) {
+    let swappedInPass = false;
+
+    for (let index = 0; index < end; index += 1) {
+      countComparison(stats);
+      recorder.push({
+        compared: [index, index + 1],
+        sorted: sortedTail(array, array.length - 1 - end)
+      });
+
+      if (array[index] > array[index + 1]) {
+        [array[index], array[index + 1]] = [array[index + 1], array[index]];
+        countMove(stats);
+        swappedInPass = true;
+        recorder.push({
+          compared: [index, index + 1],
+          swapped: [index, index + 1],
+          sorted: sortedTail(array, array.length - 1 - end)
+        });
+      }
+    }
+
+    recorder.push({ sorted: sortedTail(array, array.length - end) });
 
     if (!swappedInPass) {
       break;
     }
   }
 
-  return pushFinalStateIfNeeded(steps, array, stats);
+  return recorder.finish();
 };
 
-const selectionSort = (source) => {
+const selectionSort = (source, options = {}) => {
   const array = [...source];
   const stats = { ...baseStats };
-  const steps = [cloneState({ array, stats })];
+  const recorder = createRecorder(array, stats, options);
 
   for (let start = 0; start < array.length; start += 1) {
     let minIndex = start;
 
     for (let index = start + 1; index < array.length; index += 1) {
-      stats.comparisons += 1;
-      stats.steps += 1;
-
-      steps.push(
-        cloneState({
-          array,
-          compared: [minIndex, index],
-          sorted: Array.from({ length: start }, (_, offset) => offset),
-          stats
-        })
-      );
+      countComparison(stats);
+      recorder.push({
+        compared: [minIndex, index],
+        sorted: sortedHead(start)
+      });
 
       if (array[index] < array[minIndex]) {
         minIndex = index;
@@ -117,78 +136,50 @@ const selectionSort = (source) => {
 
     if (minIndex !== start) {
       [array[start], array[minIndex]] = [array[minIndex], array[start]];
-      stats.moves += 1;
-      stats.steps += 1;
-
-      steps.push(
-        cloneState({
-          array,
-          swapped: [start, minIndex],
-          sorted: Array.from({ length: start }, (_, offset) => offset),
-          stats
-        })
-      );
+      countMove(stats);
+      recorder.push({
+        swapped: [start, minIndex],
+        sorted: sortedHead(start)
+      });
     }
 
-    steps.push(
-      cloneState({
-        array,
-        sorted: Array.from({ length: start + 1 }, (_, offset) => offset),
-        stats
-      })
-    );
+    recorder.push({ sorted: sortedHead(start + 1) });
   }
 
-  return pushFinalStateIfNeeded(steps, array, stats);
+  return recorder.finish();
 };
 
-const insertionSort = (source) => {
+const insertionSort = (source, options = {}) => {
   const array = [...source];
   const stats = { ...baseStats };
-  const steps = [cloneState({ array, stats })];
+  const recorder = createRecorder(array, stats, options);
 
   for (let index = 1; index < array.length; index += 1) {
     const value = array[index];
     let position = index - 1;
 
-    steps.push(
-      cloneState({
-        array,
-        compared: [index],
-        sorted: Array.from({ length: index }, (_, offset) => offset),
-        stats
-      })
-    );
+    recorder.push({
+      compared: [index],
+      sorted: sortedHead(index)
+    });
 
     while (position >= 0) {
-      stats.comparisons += 1;
-      stats.steps += 1;
-
-      steps.push(
-        cloneState({
-          array,
-          compared: [position, position + 1],
-          sorted: Array.from({ length: index }, (_, offset) => offset),
-          stats
-        })
-      );
+      countComparison(stats);
+      recorder.push({
+        compared: [position, position + 1],
+        sorted: sortedHead(index)
+      });
 
       if (array[position] <= value) {
         break;
       }
 
       array[position + 1] = array[position];
-      stats.moves += 1;
-      stats.steps += 1;
-
-      steps.push(
-        cloneState({
-          array,
-          swapped: [position, position + 1],
-          sorted: Array.from({ length: index }, (_, offset) => offset),
-          stats
-        })
-      );
+      countMove(stats);
+      recorder.push({
+        swapped: [position, position + 1],
+        sorted: sortedHead(index)
+      });
 
       position -= 1;
     }
@@ -198,55 +189,40 @@ const insertionSort = (source) => {
 
     if (movedToNewPosition) {
       array[targetPosition] = value;
-      stats.moves += 1;
-      stats.steps += 1;
+      countMove(stats);
     }
 
-    steps.push(
-      cloneState({
-        array,
-        swapped: movedToNewPosition ? [targetPosition] : [],
-        sorted: Array.from({ length: index + 1 }, (_, offset) => offset),
-        stats
-      })
-    );
+    recorder.push({
+      swapped: movedToNewPosition ? [targetPosition] : [],
+      sorted: sortedHead(index + 1)
+    });
   }
 
-  return pushFinalStateIfNeeded(steps, array, stats);
+  return recorder.finish();
 };
 
-const quickSort = (source) => {
+const quickSort = (source, options = {}) => {
   const array = [...source];
   const stats = { ...baseStats };
-  const steps = [cloneState({ array, stats })];
   const finalized = new Set();
-
-  const pushState = (overrides = {}) => {
-    steps.push(
-      cloneState({
-        array,
-        sorted: sortedFromSet(finalized),
-        stats,
-        ...overrides
-      })
-    );
-  };
+  const recorder = createRecorder(array, stats, {
+    ...options,
+    getSorted: () => sortedFromSet(finalized)
+  });
 
   const partition = (low, high) => {
     const pivotValue = array[high];
     let storeIndex = low;
 
     for (let index = low; index < high; index += 1) {
-      stats.comparisons += 1;
-      stats.steps += 1;
-      pushState({ compared: [index, high] });
+      countComparison(stats);
+      recorder.push({ compared: [index, high] });
 
       if (array[index] < pivotValue) {
         if (index !== storeIndex) {
           [array[index], array[storeIndex]] = [array[storeIndex], array[index]];
-          stats.moves += 1;
-          stats.steps += 1;
-          pushState({ compared: [index, high], swapped: [index, storeIndex] });
+          countMove(stats);
+          recorder.push({ compared: [index, high], swapped: [index, storeIndex] });
         }
 
         storeIndex += 1;
@@ -255,13 +231,12 @@ const quickSort = (source) => {
 
     if (storeIndex !== high) {
       [array[storeIndex], array[high]] = [array[high], array[storeIndex]];
-      stats.moves += 1;
-      stats.steps += 1;
-      pushState({ swapped: [storeIndex, high] });
+      countMove(stats);
+      recorder.push({ swapped: [storeIndex, high] });
     }
 
     finalized.add(storeIndex);
-    pushState();
+    recorder.push();
     return storeIndex;
   };
 
@@ -272,7 +247,7 @@ const quickSort = (source) => {
 
     if (low === high) {
       finalized.add(low);
-      pushState();
+      recorder.push();
       return;
     }
 
@@ -282,25 +257,17 @@ const quickSort = (source) => {
   };
 
   sort(0, array.length - 1);
-  return pushFinalStateIfNeeded(steps, array, stats);
+  return recorder.finish();
 };
 
-const heapSort = (source) => {
+const heapSort = (source, options = {}) => {
   const array = [...source];
   const stats = { ...baseStats };
-  const steps = [cloneState({ array, stats })];
   const finalized = new Set();
-
-  const pushState = (overrides = {}) => {
-    steps.push(
-      cloneState({
-        array,
-        sorted: sortedFromSet(finalized),
-        stats,
-        ...overrides
-      })
-    );
-  };
+  const recorder = createRecorder(array, stats, {
+    ...options,
+    getSorted: () => sortedFromSet(finalized)
+  });
 
   const heapify = (heapSize, rootIndex) => {
     let currentRoot = rootIndex;
@@ -311,9 +278,8 @@ const heapSort = (source) => {
       let largest = currentRoot;
 
       if (leftChild < heapSize) {
-        stats.comparisons += 1;
-        stats.steps += 1;
-        pushState({ compared: [largest, leftChild] });
+        countComparison(stats);
+        recorder.push({ compared: [largest, leftChild] });
 
         if (array[leftChild] > array[largest]) {
           largest = leftChild;
@@ -321,9 +287,8 @@ const heapSort = (source) => {
       }
 
       if (rightChild < heapSize) {
-        stats.comparisons += 1;
-        stats.steps += 1;
-        pushState({ compared: [largest, rightChild] });
+        countComparison(stats);
+        recorder.push({ compared: [largest, rightChild] });
 
         if (array[rightChild] > array[largest]) {
           largest = rightChild;
@@ -335,9 +300,8 @@ const heapSort = (source) => {
       }
 
       [array[currentRoot], array[largest]] = [array[largest], array[currentRoot]];
-      stats.moves += 1;
-      stats.steps += 1;
-      pushState({ swapped: [currentRoot, largest] });
+      countMove(stats);
+      recorder.push({ swapped: [currentRoot, largest] });
       currentRoot = largest;
     }
   };
@@ -348,10 +312,9 @@ const heapSort = (source) => {
 
   for (let end = array.length - 1; end > 0; end -= 1) {
     [array[0], array[end]] = [array[end], array[0]];
-    stats.moves += 1;
-    stats.steps += 1;
+    countMove(stats);
     finalized.add(end);
-    pushState({ swapped: [0, end] });
+    recorder.push({ swapped: [0, end] });
     heapify(end, 0);
   }
 
@@ -359,7 +322,7 @@ const heapSort = (source) => {
     finalized.add(0);
   }
 
-  return pushFinalStateIfNeeded(steps, array, stats);
+  return recorder.finish();
 };
 
 export const algorithmMap = {
@@ -368,6 +331,21 @@ export const algorithmMap = {
   insertion: insertionSort,
   quick: quickSort,
   heap: heapSort
+};
+
+export const summarizeAlgorithmRun = (algorithmKey, source) => {
+  const start = performance.now();
+  const [finalState] = algorithmMap[algorithmKey](source, { recordSteps: false });
+  const end = performance.now();
+
+  return {
+    key: algorithmKey,
+    comparisons: finalState.stats.comparisons,
+    moves: finalState.stats.moves,
+    steps: finalState.stats.steps,
+    generationTimeMs: Number((end - start).toFixed(2)),
+    resultArray: finalState.array
+  };
 };
 
 export const algorithmContent = {

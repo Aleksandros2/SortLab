@@ -1,4 +1,3 @@
-export const ARRAY_INPUT_MIN_LENGTH = 1;
 export const ARRAY_INPUT_MAX_LENGTH = 64;
 export const ARRAY_INPUT_MIN_VALUE = -99;
 export const ARRAY_INPUT_MAX_VALUE = 99;
@@ -16,13 +15,6 @@ export const parseArrayInput = (input) => {
   }
 
   const parts = trimmed.split(/[,\s;]+/).filter(Boolean);
-
-  if (parts.length < ARRAY_INPUT_MIN_LENGTH) {
-    return {
-      values: [],
-      error: 'Gib mindestens eine Zahl ein.'
-    };
-  }
 
   if (parts.length > ARRAY_INPUT_MAX_LENGTH) {
     return {

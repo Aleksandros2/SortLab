@@ -278,16 +278,14 @@ button:disabled {
   opacity: 0.5;
 }
 
-button.primary,
-button.primary.accent {
+button.primary {
   background: var(--accent);
   border-color: var(--accent-dark);
   color: #ffffff;
   font-weight: 700;
 }
 
-button.primary:hover,
-button.primary.accent:hover {
+button.primary:hover {
   background: var(--accent-dark);
 }
 
@@ -298,10 +296,6 @@ button.secondary {
 button.secondary:hover {
   background: #fff7ed;
   border-color: var(--compare);
-}
-
-.full-width {
-  width: 100%;
 }
 
 .field-hint,
@@ -328,13 +322,6 @@ button.secondary:hover {
 
 .preset-grid button:last-child {
   grid-column: 1 / -1;
-}
-
-.split-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: flex-start;
 }
 
 .legend {
@@ -455,20 +442,8 @@ button.secondary:hover {
   transition: border-color 0.16s ease, background-color 0.16s ease;
 }
 
-.stat-card:nth-child(1) {
+.stat-card {
   border-left: 4px solid var(--accent);
-}
-
-.stat-card:nth-child(2) {
-  border-left: 4px solid var(--move);
-}
-
-.stat-card:nth-child(3) {
-  border-left: 4px solid var(--compare);
-}
-
-.stat-card:nth-child(4) {
-  border-left: 4px solid var(--sorted);
 }
 
 .info-card {
@@ -628,10 +603,6 @@ button.secondary:hover {
   .preset-grid button:last-child,
   .compare-controls .primary {
     grid-column: auto;
-  }
-
-  .split-head {
-    display: grid;
   }
 
   .chart {
