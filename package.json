@@ -2,6 +2,20 @@
   "name": "sortlab",
   "private": true,
   "version": "0.0.0",
+  "description": "Interactive React visualizer for comparing sorting algorithms and their operations.",
+  "author": "Aleksandar Nikolic",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AleksZyro/SortLab.git"
+  },
+  "keywords": [
+    "sorting",
+    "visualizer",
+    "react",
+    "vite",
+    "portfolio"
+  ],
   "type": "module",
   "scripts": {
     "dev": "vite",

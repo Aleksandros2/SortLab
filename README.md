@@ -152,7 +152,7 @@ Im Repository ist aktuell kein Demo-Video oder GIF enthalten. Falls später ein 
 
 ## Lizenzstatus
 
-Es wurde keine Open-Source-Lizenz vergeben. Der Quellcode ist öffentlich einsehbar, aber es werden keine zusätzlichen Nutzungsrechte eingeräumt.
+Dieses Projekt ist unter der MIT-Lizenz veröffentlicht. Details stehen in [LICENSE](./LICENSE).
 
 ## Repository-Metadaten Vorschlag
 

@@ -152,7 +152,7 @@ The repository currently does not include a demo video or GIF. If a short demo i
 
 ## License Status
 
-No open-source license has been granted. The source code is publicly viewable, but no additional usage rights are granted.
+This project is published under the MIT License. See [LICENSE](./LICENSE) for details.
 
 ## Repository Metadata Suggestion
 
